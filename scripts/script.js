@@ -40,9 +40,11 @@ document.getElementById("start").onclick = async function () {
 
     // Initialize the stop button
     initStop(client, localVideoTrack);
+    initSend(client);
     
     // Play the local track
     localVideoTrack.play('me');
+    // localVideoTrack.play('remote-container');
 
     // Set up event listeners for remote users publishing or unpublishing tracks
     client.on("user-published", async (user, mediaType) => {
@@ -59,6 +61,17 @@ document.getElementById("start").onclick = async function () {
         if (mediaType === "video") {
             removeVideoContainer(user.uid) // removes the injected container
         }
+    });
+
+    client.on("stream-message", (uid, payload) => {
+        const string = utf8ArrayToString(payload);
+        console.log(uid+ " stream message:" + string);
+        client.sendMetadata(payload);
+    });
+
+    client.on("receive-metadata", (uid, data) => {
+        const string = utf8ArrayToString(data);
+        console.log(uid+ " meta message:" + string ); 
     });
 
     // Join a channnel and retrieve the uid for local user
@@ -86,3 +99,76 @@ function initStop(client, localVideoTrack){
         stopBtn.disabled = true;
     }
 }
+
+function initSend(client) {
+    const sendBtn = document.getElementById('send');
+    sendBtn.disabled = false; // Enable the stop button
+    sendBtn.onclick = null; // Remove any previous event listener
+    sendBtn.onclick = function () {
+        var msg = document.getElementById("message").value;
+        console.log("sending msg:" + msg);
+        client.sendStreamMessage(msg, true);
+    }
+
+}
+
+//meta data
+// let b = df(a.metadata);
+// this.emit(R.RECEIVE_METADATA, a.uid, b)
+// "receive-metadata"
+// SEND_METADATA send_metadata
+
+function utf8ArrayToString(aBytes) {
+    var sStr = "";
+    
+    for (var nPart, nLen = aBytes.length, nIdx = 0; nIdx < nLen; nIdx++) {
+        nPart = aBytes[nIdx];
+        
+        sStr += String.fromCharCode(
+            nPart > 251 && nPart < 254 && nIdx + 5 < nLen ? /* six bytes */
+                /* (nPart - 252 << 30) may be not so safe in ECMAScript! So...: */
+                (nPart - 252) * 1073741824 + (aBytes[++nIdx] - 128 << 24) + (aBytes[++nIdx] - 128 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+            : nPart > 247 && nPart < 252 && nIdx + 4 < nLen ? /* five bytes */
+                (nPart - 248 << 24) + (aBytes[++nIdx] - 128 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+            : nPart > 239 && nPart < 248 && nIdx + 3 < nLen ? /* four bytes */
+                (nPart - 240 << 18) + (aBytes[++nIdx] - 128 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+            : nPart > 223 && nPart < 240 && nIdx + 2 < nLen ? /* three bytes */
+                (nPart - 224 << 12) + (aBytes[++nIdx] - 128 << 6) + aBytes[++nIdx] - 128
+            : nPart > 191 && nPart < 224 && nIdx + 1 < nLen ? /* two bytes */
+                (nPart - 192 << 6) + aBytes[++nIdx] - 128
+            : /* nPart < 127 ? */ /* one byte */
+                nPart
+        );
+    }
+    
+    return sStr;
+}
+
+function stringToUtf8ByteArray (str) {
+    // TODO(user): Use native implementations if/when available
+    var out = [], p = 0;
+    for (var i = 0; i < str.length; i++) {
+      var c = str.charCodeAt(i);
+      if (c < 128) {
+        out[p++] = c;
+      } else if (c < 2048) {
+        out[p++] = (c >> 6) | 192;
+        out[p++] = (c & 63) | 128;
+      } else if (
+          ((c & 0xFC00) == 0xD800) && (i + 1) < str.length &&
+          ((str.charCodeAt(i + 1) & 0xFC00) == 0xDC00)) {
+        // Surrogate Pair
+        c = 0x10000 + ((c & 0x03FF) << 10) + (str.charCodeAt(++i) & 0x03FF);
+        out[p++] = (c >> 18) | 240;
+        out[p++] = ((c >> 12) & 63) | 128;
+        out[p++] = ((c >> 6) & 63) | 128;
+        out[p++] = (c & 63) | 128;
+      } else {
+        out[p++] = (c >> 12) | 224;
+        out[p++] = ((c >> 6) & 63) | 128;
+        out[p++] = (c & 63) | 128;
+      }
+    }
+    return out;
+  }
+
