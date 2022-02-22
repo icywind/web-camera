@@ -28,6 +28,7 @@ document.getElementById("start").onclick = async function () {
     // Client Setup
     // Defines a client for RTC
     const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+    const client2 = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
 
     // Get credentials from the form
     let appId = document.getElementById("app-id").value;
@@ -41,6 +42,7 @@ document.getElementById("start").onclick = async function () {
     // Initialize the stop button
     initStop(client, localVideoTrack);
     initSend(client);
+    initShareScreen(client2);
     
     // Play the local track
     localVideoTrack.play('me');
@@ -111,6 +113,42 @@ function initSend(client) {
     }
 
 }
+
+var isSharingScreen = false;
+var screenShareTrack = null;
+
+function initShareScreen(client) {
+    const shareBtn = document.getElementById('share');
+        // Get credentials from the form
+        let appId = document.getElementById("app-id").value;
+        let channelId = document.getElementById("channel").value;
+        let token = document.getElementById("token").value || null;
+
+    shareBtn.disabled = false; // Enable the share button
+    shareBtn.onclick = function() {
+        shareBtn.textContent = isSharingScreen ? "Share Screen" : "Stop Sharing";
+        isSharingScreen = !isSharingScreen;
+        if (isSharingScreen) {
+            AgoraRTC.createScreenVideoTrack({
+                encoderConfig: "1080p_1", optimizationMode: "detail"}
+                ).then(localVideoTrack => { 
+                    screenShareTrack = localVideoTrack; 
+                    client.join(appId, channelId, token, null).then(uid => {
+                        client.publish(screenShareTrack);
+                    });
+                });
+        } else {
+            if (screenShareTrack) {
+                client.unpublish(screenShareTrack);
+                client.leave().then();
+                screenShareTrack.stop();
+                screenShareTrack.close();
+                screenShareTrack = null;
+            }
+        }
+    }
+}
+
 
 //meta data
 // let b = df(a.metadata);
