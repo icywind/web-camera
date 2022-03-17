@@ -1,24 +1,14 @@
-# Add Video Calling in your Web App using Agora Web NG SDK 🖥
+# Test Application with Video Calling feature using Agora Web SDK 🖥
 
   
 
-**Note: Updated for usage with NG SDK (4.x).**
+**Note: based on the original SDK's structure and README.  
 
   
+You can test a live demo of this tutorial [here](https://optimistic-archimedes-f2a05f.netlify.app/).
 
-Integrating video streaming features within your application can be very tedious and time-consuming. Maintaining a low-latency video server, load balancing, listening to end-user events (screen off, reload, etc.) are some of the really painful hassles… not to mention having cross-platform compatibility.
 
-Feeling dizzy already? Dread not! Agora’s Video SDK allows you to embed video calling features into your application within a matter of minutes. In addition, all the video server details are abstracted away.
-
-In this tutorial, we'll create a bare-bones web application with video calling features using vanilla JavaScript and the Agora Web NG SDK.
-
-  
-
-You can test a live demo of this tutorial [here](https://agora-ng-sdk-demo.netlify.app/).
-
-  
-
-## Let’s start by signing up with Agora.
+## Let’s start by signing up with Agora. (This is the README from the Web SDK)
 
 Go ahead to [https://sso.agora.io/en/v2/signup](https://sso.agora.io/en/v2/signup) to create an account and login into the dashboard.
 
